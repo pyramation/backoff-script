@@ -1,6 +1,6 @@
 {
   "name": "backoff-script",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "backoff script",
   "main": "index.js",
   "bin": {

@@ -5,44 +5,53 @@ const util = require('util');
 const path = require('path');
 const execFile = util.promisify(require('child_process').execFile);
 
-var waitFor = backoff.exponential({
-  initialDelay: 10,
-  maxDelay: 1000
-});
+class Backoff {
+  constructor() {
+    this.events = backoff.exponential({
+      initialDelay: 10,
+      maxDelay: 1000
+    });
 
-waitFor.on('backoff', function(number, delay) {
-  if (!number) return;
-  console.log('start: ' + number + ' ' + delay + 'ms');
-});
+    this.events.on('backoff', this.handleBackoff);
+    this.events.on('ready', this.handleReady);
+    this.events.backoff();
 
-waitFor.on('ready', async function(number, delay) {
-  let failed = false;
-
-  const file = path.resolve(process.cwd() + '/' + process.argv[2]);
-  let stderr, stdout;
-
-  try {
-    ({stderr, stdout} = await execFile(file));
-  } catch (e) {
-    console.error(e.stderr);
-    failed = true;
+    this.handleReady = this.handleReady.bind(this);
+    this.handleBackoff = this.handleBackoff.bind(this);
   }
-
-  if (stderr) {
-    console.error(stderr);
-    failed = true;
+  handleBackoff(number, delay) {
+    if (!number) return;
+    console.log('start: ' + number + ' ' + delay + 'ms');
   }
+  async handleReady(number, delay) {
+    const file = path.resolve(process.cwd() + '/' + process.argv[2]);
+    let stderr;
+    let stdout;
+    let failed = false;
 
-  if (failed) {
-    console.log('Backoff: ' + number + ' ' + delay + 'ms');
-    return waitFor.backoff();
-  } else {
-    waitFor.reset();
+    try {
+      ({stderr, stdout} = await execFile(file));
+    } catch (e) {
+      console.error(e.stderr);
+      failed = true;
+    }
 
-    // success!
-    process.exit(0);
+    if (stderr) {
+      console.error(stderr);
+      failed = true;
+    }
+
+    if (failed) {
+      console.log('Backoff: ' + number + ' ' + delay + 'ms');
+      return this.events.backoff();
+    } else {
+      this.events.reset();
+
+      // success!
+      process.exit(0);
+    }
+
   }
+}
 
-});
-
-waitFor.backoff();
+new Backoff();
