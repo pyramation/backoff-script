@@ -1,0 +1,25 @@
+{
+  "name": "backoff-script",
+  "version": "1.0.0",
+  "description": "backoff script",
+  "main": "index.js",
+  "bin": {
+    "backoff-script": "./script.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/pyramation/backoff-script.git"
+  },
+  "keywords": [
+    "backoff"
+  ],
+  "author": "Dan Lynch <pyramation@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pyramation/backoff-script/issues"
+  },
+  "homepage": "https://github.com/pyramation/backoff-script#readme",
+  "dependencies": {
+    "backoff": "^2.5.0"
+  }
+}
