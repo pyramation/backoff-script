@@ -7,50 +7,37 @@ const execFile = util.promisify(require('child_process').execFile);
 
 class Backoff {
   constructor() {
+
+    this.handleReady = this.handleReady.bind(this);
+    this.handleBackoff = this.handleBackoff.bind(this);
+
     this.events = backoff.exponential({
       initialDelay: 10,
       maxDelay: 1000
     });
-
     this.events.on('backoff', this.handleBackoff);
     this.events.on('ready', this.handleReady);
-    this.events.backoff();
 
-    this.handleReady = this.handleReady.bind(this);
-    this.handleBackoff = this.handleBackoff.bind(this);
+
+    this.events.backoff();
   }
   handleBackoff(number, delay) {
     if (!number) return;
     console.log('start: ' + number + ' ' + delay + 'ms');
   }
-  async handleReady(number, delay) {
+  handleReady(number, delay) {
     const file = path.resolve(process.cwd() + '/' + process.argv[2]);
-    let stderr;
-    let stdout;
-    let failed = false;
 
-    try {
-      ({stderr, stdout} = await execFile(file));
-    } catch (e) {
-      console.error(e.stderr);
-      failed = true;
-    }
-
-    if (stderr) {
-      console.error(stderr);
-      failed = true;
-    }
-
-    if (failed) {
-      console.log('Backoff: ' + number + ' ' + delay + 'ms');
-      return this.events.backoff();
-    } else {
+    execFile(file).then((stdout, stderr) => {
+      if(stderr) throw new Error(stderr);
       this.events.reset();
-
       // success!
       process.exit(0);
-    }
-
+    }).catch((error) => {
+      console.error(error.stderr || error.message);
+      console.log('Backoff: ' + number + ' ' + delay + 'ms');
+      return this.events.backoff();
+    });
   }
 }
 
