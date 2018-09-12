@@ -18,12 +18,18 @@ waitFor.on('backoff', function(number, delay) {
 waitFor.on('ready', async function(number, delay) {
   let failed = false;
 
-    const file = path.resolve(process.cwd() + '/' + process.argv[2]);
+  const file = path.resolve(process.cwd() + '/' + process.argv[2]);
+  let stderr, stdout;
 
   try {
-    await execFile(file);
+    ({stderr, stdout} = await execFile(file));
   } catch (e) {
     console.error(e.stderr);
+    failed = true;
+  }
+
+  if (stderr) {
+    console.error(stderr);
     failed = true;
   }
 
