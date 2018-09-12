@@ -2,6 +2,7 @@
 
 const backoff = require('backoff');
 const util = require('util');
+const path = require('path');
 const execFile = util.promisify(require('child_process').execFile);
 
 var waitFor = backoff.exponential({
@@ -17,8 +18,10 @@ waitFor.on('backoff', function(number, delay) {
 waitFor.on('ready', async function(number, delay) {
   let failed = false;
 
+    const file = path.resolve(process.cwd() + '/' + process.argv[2]);
+
   try {
-    await execFile(process.argv[1]);
+    await execFile(file);
   } catch (e) {
     console.error(e);
     failed = true;
@@ -29,7 +32,7 @@ waitFor.on('ready', async function(number, delay) {
     return waitFor.backoff();
   } else {
     waitFor.reset();
-    
+
     // success!
     process.exit(0);
   }
