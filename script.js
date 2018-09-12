@@ -23,7 +23,7 @@ waitFor.on('ready', async function(number, delay) {
   try {
     await execFile(file);
   } catch (e) {
-    console.error(e);
+    console.error(e.stderr);
     failed = true;
   }
 
